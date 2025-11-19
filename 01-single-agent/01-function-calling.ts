@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { etsyFeesCalculator, getInput, loadingMessages, showLoading } from "./lib/util.js";
+import { checkForOpenAIKey, etsyFeesCalculator, getInput, loadingMessages, printWelcomeMessage, showLoading, systemPrompt } from "./lib/util.js";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -33,11 +33,6 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     },
   },
 ];
-
-// System prompt for the conversational agent
-const systemPrompt = `You are a helpful assistant that can calculate Etsy seller fees.
-When a user asks about Etsy fees or wants to know how much they'll pay in fees for selling an item on Etsy, use the etsyFeesCalculator function.
-Be friendly and conversational. You can answer general questions, but your specialty is helping with Etsy fee calculations.`;
 
 // Message history to maintain conversation context
 const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -106,16 +101,9 @@ async function chat(userInput: string): Promise<string> {
 }
 
 async function main() {
-  // Check for API key
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("Error: OPENAI_API_KEY environment variable is not set.");
-    console.error("Please set it with: export OPENAI_API_KEY=your-api-key");
-    process.exit(1);
-  }
+  checkForOpenAIKey();
+  printWelcomeMessage();
 
-  console.log("Welcome to the Etsy Fees Calculator Agent!");
-  console.log("I can help you calculate Etsy seller fees for your products.");
-  console.log('Type "exit" or "quit" to end the conversation.\n');
 
   // Interactive loop
   while (true) {

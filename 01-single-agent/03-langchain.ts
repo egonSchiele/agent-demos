@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
 import { z } from "zod";
-import { etsyFeesCalculator, getInput, loadingMessages, showLoading } from "./lib/util.js";
+import { checkForOpenAIKey, etsyFeesCalculator, getInput, loadingMessages, printWelcomeMessage, showLoading, systemPrompt } from "./lib/util.js";
 
 // Initialize ChatOpenAI model
 const model = new ChatOpenAI({
@@ -19,7 +19,7 @@ const etsyFeesCalculatorTool = new DynamicStructuredTool({
   schema: z.object({
     itemPrice: z.number().describe("The price of the Etsy item in dollars"),
     offsiteAds: z
-      .union([z.boolean(), z.null()])
+      .boolean().nullable()
       .describe("Whether the item uses Etsy offsite ads (use null or false if not applicable)"),
   }),
   func: async ({ itemPrice, offsiteAds }) => {
@@ -31,10 +31,6 @@ const etsyFeesCalculatorTool = new DynamicStructuredTool({
   },
 });
 
-// System prompt for the conversational agent
-const systemPrompt = `You are a helpful assistant that can calculate Etsy seller fees.
-When a user asks about Etsy fees or wants to know how much they'll pay in fees for selling an item on Etsy, use the etsyFeesCalculator function.
-Be friendly and conversational. You can answer general questions, but your specialty is helping with Etsy fee calculations.`;
 
 // Message history to maintain conversation context
 const messages: any[] = [new SystemMessage(systemPrompt)];
@@ -80,19 +76,11 @@ async function chat(userInput: string): Promise<string> {
 }
 
 async function main() {
-  // Check for API key
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("Error: OPENAI_API_KEY environment variable is not set.");
-    console.error("Please set it with: export OPENAI_API_KEY=your-api-key");
-    process.exit(1);
-  }
-
+  checkForOpenAIKey();
+  printWelcomeMessage();
   // Bind tools to the model
   modelWithTools = model.bindTools([etsyFeesCalculatorTool]);
 
-  console.log("Welcome to the Etsy Fees Calculator Agent!");
-  console.log("I can help you calculate Etsy seller fees for your products.");
-  console.log('Type "exit" or "quit" to end the conversation.\n');
 
   // Interactive loop
   while (true) {
