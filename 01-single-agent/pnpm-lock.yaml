@@ -17,6 +17,9 @@ importers:
       '@langchain/openai':
         specifier: ^0.3.16
         version: 0.3.17(@langchain/core@0.3.79(openai@6.9.1(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)
+      '@openrouter/sdk':
+        specifier: ^0.1.13
+        version: 0.1.13
       langchain:
         specifier: ^0.3.13
         version: 0.3.36(@langchain/core@0.3.79(openai@6.9.1(ws@8.18.3)(zod@3.25.76)))(openai@6.9.1(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
@@ -85,6 +88,20 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.2.21 <0.4.0'
+
+  '@openrouter/sdk@0.1.13':
+    resolution: {integrity: sha512-OTHsblzLi0GZu9L0zSA/2bVrLcx8uj0aYs0nN85/+gtwZQdT5Vv2Wiwzz5FyWoD2RKuX5C+dSBHFEaVCmhTfQQ==}
+    peerDependencies:
+      '@tanstack/react-query': ^5
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
+    peerDependenciesMeta:
+      '@tanstack/react-query':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   '@types/node-fetch@2.6.13':
     resolution: {integrity: sha512-QGpRVpzSaUs30JBSGPjOg4Uveu384erbHBoT1zeONvyCfwQxIkUshLAOqN/k9EjGviPRmWTTe6aH2qySWKTVSw==}
@@ -531,6 +548,10 @@ snapshots:
     dependencies:
       '@langchain/core': 0.3.79(openai@6.9.1(ws@8.18.3)(zod@3.25.76))
       js-tiktoken: 1.0.21
+
+  '@openrouter/sdk@0.1.13':
+    dependencies:
+      zod: 3.25.76
 
   '@types/node-fetch@2.6.13':
     dependencies:

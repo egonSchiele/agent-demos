@@ -1,15 +1,17 @@
-import OpenAI from "openai";
-import { checkForOpenAIKey, etsyFeesCalculator, getInput, loadingMessages, printWelcomeMessage, showLoading, systemPrompt } from "./lib/util.js";
+import { OpenRouter } from "@openrouter/sdk";
+import { etsyFeesCalculator, getInput, loadingMessages, printWelcomeMessage, showLoading, systemPrompt } from "./lib/util.js";
+import { AssistantMessage } from "@openrouter/sdk/models";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const model = "anthropic/claude-3.5-sonnet";
+// Initialize OpenRouter client
+const openrouter = new OpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-// Define the function tool for OpenAI
-const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+// Define the function tool for OpenRouter (same format as OpenAI)
+const tools = [
   {
-    type: "function",
+    type: "function" as const,
     function: {
       name: "etsyFeesCalculator",
       description:
@@ -22,12 +24,12 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
             description: "The price of the Etsy item in dollars",
           },
           offsiteAds: {
-            type: "boolean",
+            type: ["boolean", "null"],
             description:
-              "Whether the item uses Etsy offsite ads (defaults to false)",
+              "Whether the item uses Etsy offsite ads (use null or false if not applicable)",
           },
         },
-        required: ["itemPrice"],
+        required: ["itemPrice", "offsiteAds"],
         additionalProperties: false,
       },
     },
@@ -35,17 +37,17 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 ];
 
 // Message history to maintain conversation context
-const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+const messages: any[] = [
   { role: "system", content: systemPrompt },
 ];
 
-async function chat(userInput: string): Promise<string> {
+async function chat(userInput: string): Promise<AssistantMessage["content"]> {
   // Add user message to history
   messages.push({ role: "user", content: userInput });
 
   // Initial API call
-  let response = await openai.chat.completions.create({
-    model: "gpt-4-turbo",
+  let response = await openrouter.chat.send({
+    model,
     messages: messages,
     tools: tools,
   });
@@ -53,12 +55,12 @@ async function chat(userInput: string): Promise<string> {
   let responseMessage = response.choices[0].message;
 
   // Handle function calls
-  while (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+  while (responseMessage.toolCalls && responseMessage.toolCalls.length > 0) {
     // Add assistant's response with tool calls to message history
     messages.push(responseMessage);
 
     // Process each tool call
-    for (const toolCall of responseMessage.tool_calls) {
+    for (const toolCall of responseMessage.toolCalls) {
       if (
         toolCall.type === "function" &&
         toolCall.function.name === "etsyFeesCalculator"
@@ -81,8 +83,8 @@ async function chat(userInput: string): Promise<string> {
     }
 
     // Get the next response from the model
-    response = await openai.chat.completions.create({
-      model: "gpt-4-turbo",
+    response = await openrouter.chat.send({
+      model,
       messages: messages,
       tools: tools,
     });
@@ -92,8 +94,7 @@ async function chat(userInput: string): Promise<string> {
 
   // Add final assistant response to history
   messages.push(responseMessage);
-  // console.log(JSON.stringify(messages, null, 2)); // Debug: log message history
-  // console.log({messages});
+
   return (
     responseMessage.content ||
     "I apologize, but I could not generate a response."
@@ -101,8 +102,17 @@ async function chat(userInput: string): Promise<string> {
 }
 
 async function main() {
-  checkForOpenAIKey();
+  // Check for API key
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.error("Error: OPENROUTER_API_KEY environment variable is not set.");
+    console.error("Please set it with: export OPENROUTER_API_KEY=your-api-key");
+    console.error("\nYou can get an API key from: https://openrouter.ai/keys");
+    process.exit(1);
+  }
+
   printWelcomeMessage();
+  console.log("Using model:", model);
+
 
   // Interactive loop
   while (true) {
