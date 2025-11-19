@@ -1,5 +1,5 @@
 import * as readline from "readline";
-
+import { color } from "termcolors";
 export type EtsyFees = {
   listingFee: number;
   transactionFee: number;
@@ -44,14 +44,56 @@ export async function getInput(prompt: string): Promise<string> {
       resolve(answer);
     });
   });
+  rl.close();
   if (
     userInput.toLowerCase() === "exit" ||
     userInput.toLowerCase() === "quit"
   ) {
     console.log("\nGoodbye! Have a great day!");
-    rl.close();
     process.exit(0);
   }
 
   return userInput;
+}
+
+export interface LoadingController {
+  stop: () => void;
+}
+
+export function showLoading(
+  message: string | string[] = "Thinking..."
+): LoadingController {
+  const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let frameIndex = 0;
+
+  // Handle message cycling if an array is provided
+  const messages = Array.isArray(message) ? message : [message];
+  let messageIndex = 0;
+  let currentMessage = messages[0];
+
+  // Update spinner animation every 80ms
+  const spinnerIntervalId = setInterval(() => {
+    const frame = spinnerFrames[frameIndex];
+    process.stdout.write(color.red(`\r${frame} ${currentMessage}`));
+    frameIndex = (frameIndex + 1) % spinnerFrames.length;
+  }, 80);
+
+  // Cycle through messages every 2 seconds if multiple messages provided
+  let messageIntervalId: NodeJS.Timeout | null = null;
+  if (messages.length > 1) {
+    messageIntervalId = setInterval(() => {
+      messageIndex = (messageIndex + 1) % messages.length;
+      currentMessage = messages[messageIndex];
+    }, 2000);
+  }
+
+  return {
+    stop: () => {
+      clearInterval(spinnerIntervalId);
+      if (messageIntervalId) {
+        clearInterval(messageIntervalId);
+      }
+      process.stdout.write("\r\x1b[K"); // Clear the line
+    },
+  };
 }

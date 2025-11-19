@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
@@ -11,13 +12,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
+    "@types/node": "^24.10.1"
   },
   "dependencies": {
-    "@openai/agents": "^0.3.2",
-    "@openai/agents-openai": "^0.3.2",
     "commander": "^14.0.2",
-    "openai": "^6.9.1"
+    "openai": "^6.9.1",
+    "termcolors": "github:egonSchiele/termcolors"
   }
 }
