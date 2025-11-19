@@ -44,3 +44,6 @@ Note: depending on how pedantic you are feeling, some of these could technically
 
 ### openai assistants api
 - a much more complex API where you're managing threads and runs yourself, but it creates an assistant that you can then see and edit through the OpenAI UI.
+
+### vercel ai sdk
+When using function calling through OpenAI, you have to manage the actual function calling part yourself, but the Vercel AI SDK takes care of this for you. However, it just returns the output of the function call and then it is up to you to generate the message based on that output.

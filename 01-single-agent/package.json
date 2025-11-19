@@ -15,10 +15,12 @@
     "@types/node": "^24.10.1"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.69",
     "@langchain/core": "^0.3.29",
     "@langchain/langgraph": "^1.0.2",
     "@langchain/openai": "^0.3.16",
     "@openrouter/sdk": "^0.1.13",
+    "ai": "^5.0.96",
     "langchain": "^0.3.13",
     "openai": "^6.9.1",
     "termcolors": "github:egonSchiele/termcolors",
