@@ -25,3 +25,22 @@ node dist/01-function-calling.js
 ## Agent vs assistant
 
 Note: depending on how pedantic you are feeling, some of these could technically be considered "assistants" instead of "agents". I am not sure how valuable this distinction is going to be, so for consistency I am just going to use the term "agent" everywhere.
+
+## Pros and cons of different methods:
+
+### function calling
+- simple to understand
+- doesn't require adding another package if you're already using OpenAI
+- can get structured responses with a structured outputs feature
+
+### langchain
+- adds another package as a dependency, but you're not locked into one model provider
+
+### langgraph
+- useful for building more complex agents, but also harder to understand as you need to build a graph
+
+### openrouter
+- adds another package as a dependency, but you're not locked into one model provider
+
+### openai assistants api
+- a much more complex API where you're managing threads and runs yourself, but it creates an assistant that you can then see and edit through the OpenAI UI.
