@@ -15,7 +15,11 @@
     "@types/node": "^24.10.1"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.29",
+    "@langchain/openai": "^0.3.16",
+    "langchain": "^0.3.13",
     "openai": "^6.9.1",
-    "termcolors": "github:egonSchiele/termcolors"
+    "termcolors": "github:egonSchiele/termcolors",
+    "zod": "^3.23.8"
   }
 }
