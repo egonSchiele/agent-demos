@@ -19,9 +19,8 @@ const etsyFeesCalculatorTool = new DynamicStructuredTool({
   schema: z.object({
     itemPrice: z.number().describe("The price of the Etsy item in dollars"),
     offsiteAds: z
-      .boolean()
-      .optional()
-      .describe("Whether the item uses Etsy offsite ads (defaults to false)"),
+      .union([z.boolean(), z.null()])
+      .describe("Whether the item uses Etsy offsite ads (use null or false if not applicable)"),
   }),
   func: async ({ itemPrice, offsiteAds }) => {
     const result = etsyFeesCalculator({

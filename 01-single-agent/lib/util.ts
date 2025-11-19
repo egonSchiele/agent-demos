@@ -9,16 +9,17 @@ export type EtsyFees = {
 
 export function etsyFeesCalculator({
   itemPrice,
-  offsiteAds = false,
+  offsiteAds,
 }: {
   itemPrice: number;
-  offsiteAds?: boolean;
+  offsiteAds: boolean | null;
 }): EtsyFees {
   const listingFee = 0.2;
   const transactionFeeRate = 0.065;
   const paymentProcessingFeeRate = 0.03;
   const paymentProcessingFixedFee = 0.25;
-  const offsiteAdsFeeRate = offsiteAds ? 0.12 : 0; // assuming 12% for Offsite Ads
+  // Treat null as false - only charge offsite ads fee if explicitly true
+  const offsiteAdsFeeRate = offsiteAds === true ? 0.12 : 0; // assuming 12% for Offsite Ads
 
   const transactionFee = itemPrice * transactionFeeRate;
   const paymentProcessingFee =
