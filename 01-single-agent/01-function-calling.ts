@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { etsyFeesCalculator, getInput, showLoading } from "./lib/util.js";
+import { etsyFeesCalculator, getInput, loadingMessages, showLoading } from "./lib/util.js";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -126,7 +126,7 @@ async function main() {
       continue;
     }
 
-    const loading = showLoading(["Thinking...", "Pondering..."]);
+    const loading = showLoading(loadingMessages);
     try {
       const response = await chat(userInput);
       loading.stop();

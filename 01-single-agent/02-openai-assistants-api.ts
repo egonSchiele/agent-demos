@@ -1,8 +1,11 @@
-import OpenAI from "openai";
-import { Command } from "commander";
-import * as readline from "readline";
-import { etsyFeesCalculator, showLoading } from "./lib/util.js";
+/* 
+  Etsy Fees Calculator Agent using OpenAI Assistants API
+  Note: The Assistants API is deprecated in favor of the Responses API
+*/
 
+import OpenAI from "openai";
+import { etsyFeesCalculator, getInput, loadingMessages, showLoading } from "./lib/util.js";
+import { color } from "termcolors";
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -51,17 +54,17 @@ async function getOrCreateAssistant(): Promise<string> {
     try {
       // Verify the assistant exists
       await openai.beta.assistants.retrieve(assistantId);
-      console.log(`Using existing assistant: ${assistantId}\n`);
+      console.log(color.green(`Using existing assistant: ${assistantId}\n`));
       return assistantId;
     } catch (error) {
-      console.log("Assistant ID not found, creating a new one...\n");
+      console.log(color.red("Assistant ID not found, creating a new one...\n"));
     }
   }
 
   // Create a new assistant
   const assistant = await openai.beta.assistants.create(ASSISTANT_CONFIG);
 
-  console.log(" Created new assistant!");
+  console.log(color.green("Created new assistant!"));
   console.log(`Assistant ID: ${assistant.id}`);
   console.log("\nTo reuse this assistant in future sessions, set:");
   console.log(`export OPENAI_ASSISTANT_ID=${assistant.id}\n`);
@@ -170,86 +173,35 @@ async function main() {
     process.exit(1);
   }
 
-  const program = new Command();
-  program
-    .name("etsy-fees-agent-assistants")
-    .description(
-      "A conversational agent using OpenAI Assistants API that can calculate Etsy seller fees"
-    )
-    .version("1.0.0");
 
-  program.action(async () => {
-    try {
-      // Get or create assistant
-      const assistantId = await getOrCreateAssistant();
+  // Get or create assistant
+  const assistantId = await getOrCreateAssistant();
 
-      // Create a new thread for this conversation
-      const thread = await openai.beta.threads.create();
-      console.log(
-        "Welcome to the Etsy Fees Calculator Agent (Assistants API)!"
-      );
-      console.log(
-        "I can help you calculate Etsy seller fees for your products."
-      );
-      console.log('Type "exit" or "quit" to end the conversation.\n');
+  // Create a new thread for this conversation
+  const thread = await openai.beta.threads.create();
+  console.log(
+    "Welcome to the Etsy Fees Calculator Agent (Assistants API)!"
+  );
+  console.log(
+    "I can help you calculate Etsy seller fees for your products."
+  );
+  console.log('Type "exit" or "quit" to end the conversation.\n');
 
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-      });
 
-      const askQuestion = (): Promise<string> => {
-        return new Promise((resolve) => {
-          rl.question("You: ", (answer) => {
-            resolve(answer);
-          });
-        });
-      };
+  // Interactive loop
+  while (true) {
+    const userInput = await getInput("You: ");
 
-      // Interactive loop
-      while (true) {
-        const userInput = await askQuestion();
-
-        // Check for exit commands
-        if (
-          userInput.toLowerCase() === "exit" ||
-          userInput.toLowerCase() === "quit"
-        ) {
-          console.log("\nGoodbye! Have a great day!");
-          rl.close();
-          break;
-        }
-
-        // Skip empty inputs
-        if (!userInput.trim()) {
-          continue;
-        }
-
-        const loading = showLoading("Processing...");
-        try {
-          const response = await chat(thread.id, assistantId, userInput);
-          loading.stop();
-          console.log(`\nAgent: ${response}\n`);
-        } catch (error) {
-          loading.stop();
-          if (error instanceof Error) {
-            console.error(`\nError: ${error.message}\n`);
-          } else {
-            console.error("\nAn unexpected error occurred.\n");
-          }
-        }
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`\nFatal error: ${error.message}`);
-      } else {
-        console.error("\nAn unexpected fatal error occurred.");
-      }
-      process.exit(1);
+    // Skip empty inputs
+    if (!userInput.trim()) {
+      continue;
     }
-  });
 
-  program.parse();
+    const loading = showLoading(loadingMessages)
+    const response = await chat(thread.id, assistantId, userInput);
+    loading.stop();
+    console.log(`\nAgent: ${response}\n`);
+  }
 }
 
 main();

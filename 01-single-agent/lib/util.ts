@@ -97,3 +97,5 @@ export function showLoading(
     },
   };
 }
+
+export const loadingMessages = ["Thinking...", "Pondering..."];
