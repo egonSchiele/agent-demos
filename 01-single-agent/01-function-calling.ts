@@ -94,7 +94,8 @@ async function chat(userInput: string): Promise<string> {
 
   // Add final assistant response to history
   messages.push(responseMessage);
-
+  // console.log(JSON.stringify(messages, null, 2)); // Debug: log message history
+  // console.log({messages});
   return responseMessage.content || 'I apologize, but I could not generate a response.';
 }
 
