@@ -1,8 +1,4 @@
-/* etsy fees calculator */
-/*Listing Fee: A one-time fee of $0.20 for each listing.
-Transaction Fee: 6.5% of the total order amount (item price + shipping).
-Payment Processing Fee: 3% + $0.25 of the total order amount.
-Offsite Ads Fee: If your sale comes from an Offsite Ad, there may be an additional fee (e.g., 12% or 15%).  */
+import * as readline from "readline";
 
 export type EtsyFees = {
   listingFee: number;
@@ -35,4 +31,27 @@ export function etsyFeesCalculator({
     paymentProcessingFee,
     offsiteAdsFee,
   };
+}
+
+export async function getInput(prompt: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const userInput: string = await new Promise((resolve) => {
+    rl.question(prompt, (answer: string) => {
+      resolve(answer);
+    });
+  });
+  if (
+    userInput.toLowerCase() === "exit" ||
+    userInput.toLowerCase() === "quit"
+  ) {
+    console.log("\nGoodbye! Have a great day!");
+    rl.close();
+    process.exit(0);
+  }
+
+  return userInput;
 }
