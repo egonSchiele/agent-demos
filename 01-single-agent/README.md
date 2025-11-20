@@ -36,7 +36,7 @@ Note: depending on how pedantic you are feeling, some of these could technically
 | langgraph | ✓ | ✓ | |
 | openrouter | ✓ | ✓ | |
 | openai deprecated assistants api | | | |
-| vercel ai sdk | ✓ | ✓ | ✓ |
+| vercel ai sdk | ✓ | ✓ (sort of) | ✓ |
 
 ## More notes
 
