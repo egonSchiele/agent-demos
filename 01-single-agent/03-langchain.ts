@@ -1,86 +1,51 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { DynamicStructuredTool } from "@langchain/core/tools";
-import { ChatOpenAI } from "@langchain/openai";
+import { tool } from "@langchain/core/tools";
+import { createAgent } from "langchain";
 import { z } from "zod";
 import { checkForOpenAIKey, etsyFeesCalculator, getInput, loadingMessages, printWelcomeMessage, showLoading, systemPrompt } from "./lib/util.js";
 
-// Initialize ChatOpenAI model
-const model = new ChatOpenAI({
-  modelName: "gpt-4-turbo",
-  temperature: 0,
-  openAIApiKey: process.env.OPENAI_API_KEY,
-});
-
-// Define the function tool for LangChain
-const etsyFeesCalculatorTool = new DynamicStructuredTool({
-  name: "etsyFeesCalculator",
-  description:
-    "Calculates Etsy seller fees for a product listing, including listing fee, transaction fee, payment processing fee, and optional offsite ads fee.",
-  schema: z.object({
-    itemPrice: z.number().describe("The price of the Etsy item in dollars"),
-    offsiteAds: z
-      .boolean().nullable()
-      .describe("Whether the item uses Etsy offsite ads (use null or false if not applicable)"),
-  }),
-  func: async ({ itemPrice, offsiteAds }) => {
-    const result = etsyFeesCalculator({
-      itemPrice,
-      offsiteAds,
-    });
+const etsyFeesCalculatorTool = tool(
+  async (args) => {
+    const result = etsyFeesCalculator(args);
     return JSON.stringify(result);
   },
+  {
+    name: "etsyFeesCalculator",
+    description:
+      "Calculates Etsy seller fees for a product listing, including listing fee, transaction fee, payment processing fee, and optional offsite ads fee.",
+    schema: z.object({
+      itemPrice: z.number().describe("The price of the Etsy item in dollars"),
+      offsiteAds: z
+        .boolean().nullable()
+        .describe("Whether the item uses Etsy offsite ads (use null or false if not applicable)"),
+    }),
+  }
+);
+
+const agent = createAgent({
+  model: "gpt-4-turbo",
+  tools: [etsyFeesCalculatorTool],
 });
 
-
 // Message history to maintain conversation context
-const messages: any[] = [new SystemMessage(systemPrompt)];
-
-// Model with tools bound
-let modelWithTools: any;
+const messages = [{ role: "system", content: systemPrompt }];
 
 async function chat(userInput: string): Promise<string> {
   // Add user message to history
-  messages.push(new HumanMessage(userInput));
+  messages.push({ role: "user", content: userInput });
 
   // Invoke the model with tools
-  let response = await modelWithTools.invoke(messages);
+  let response = await agent.invoke({ messages });
 
-  // Handle tool calls
-  while (response.tool_calls && response.tool_calls.length > 0) {
-    // Add assistant's response with tool calls to message history
-    messages.push(response);
-
-    // Process each tool call
-    for (const toolCall of response.tool_calls) {
-      if (toolCall.name === "etsyFeesCalculator") {
-        // Call the actual function
-        const result = await etsyFeesCalculatorTool.func(toolCall.args);
-
-        // Add tool result to messages
-        messages.push({
-          role: "tool",
-          content: result,
-          tool_call_id: toolCall.id,
-        });
-      }
-    }
-
-    // Get the next response from the model
-    response = await modelWithTools.invoke(messages);
-  }
+  const message = response.messages[response.messages.length - 1];
 
   // Add final assistant response to history
-  messages.push(response);
-
-  return response.content || "I apologize, but I could not generate a response.";
+  messages.push({ role: "assistant", content: String(message.content) });
+  return String(message.content);
 }
 
 async function main() {
   checkForOpenAIKey();
   printWelcomeMessage();
-  // Bind tools to the model
-  modelWithTools = model.bindTools([etsyFeesCalculatorTool]);
-
 
   // Interactive loop
   while (true) {
