@@ -93,7 +93,7 @@ async function chat(userInput: string): Promise<string> {
   // Invoke the graph
   const result = await app.invoke(
     {
-      messages: messages,
+      messages
     },
     config
   );

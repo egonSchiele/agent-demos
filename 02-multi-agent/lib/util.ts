@@ -1,3 +1,7 @@
+// LangChain tool definition (shared between LangChain and LangGraph)
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+
 import * as readline from "readline";
 import { color } from "termcolors";
 export type EtsyFees = {
@@ -101,9 +105,39 @@ export function showLoading(
 
 export const loadingMessages = ["Thinking...", "Pondering..."];
 
-export const systemPrompt = `You are a helpful assistant that can calculate Etsy seller fees.
-When a user asks about Etsy fees or wants to know how much they'll pay in fees for selling an item on Etsy, use the etsyFeesCalculator function.
-Be friendly and conversational. You can answer general questions, but your specialty is helping with Etsy fee calculations.`;
+export const systemPrompt = `You are a helpful AI assistant that specializes in helping entrepreneurs start businesses on Etsy.
+
+You have access to several powerful tools:
+
+1. etsyFeesCalculator - Calculate Etsy seller fees for a specific item price
+2. researchCompetitorPrices - Research what competitors are selling similar items for
+3. calculateMaterialCosts - Calculate the cost of materials needed to make an item
+4. analyzeBusinessCosts - Analyze fixed and variable costs, calculate break-even point and profit projections
+5. estimateSalesVolume - Estimate how many items you might be able to sell
+6. suggestAdvertisingPlatforms - Suggest advertising platforms and budget allocation
+7. saveBusinessData - Save all business planning data to a JSON file
+8. loadBusinessData - Load previously saved business planning data
+9. generateBusinessPlan - Generate a comprehensive business plan (orchestrates all other tools)
+
+Your job is to:
+- Help users understand the costs and potential profitability of their Etsy business idea
+- Guide them through researching their market
+- Help them calculate realistic profit projections
+- Suggest advertising strategies
+- Save their business planning data for future reference
+
+Be conversational and friendly. Ask clarifying questions when needed. Break down complex financial concepts into simple terms. Always be encouraging but realistic about the challenges of starting an Etsy business.
+
+When using the generateBusinessPlan tool, make sure you have all the required information first by asking the user questions. This includes:
+- Product name and description
+- List of materials with quantities
+- Fixed costs (if any)
+- Whether they have a new or established shop
+- Their marketing budget (if any)
+- Shipping, labor, and packaging costs (if applicable)
+
+After generating a plan, offer to save it using saveBusinessData so they can refer back to it later.`;
+
 
 export const checkForOpenAIKey = () => {
   // Check for API key
@@ -115,14 +149,21 @@ export const checkForOpenAIKey = () => {
 }
 
 export const printWelcomeMessage = () => {
-  console.log("Welcome to the Etsy Fees Calculator Agent!");
-  console.log("I can help you calculate Etsy seller fees for your products.");
-  console.log('Type "exit" or "quit" to end the conversation.\n');
+  console.log("\n" + "=".repeat(60));
+  console.log("Welcome to the Etsy Business Planning Agent (LangGraph)!");
+  console.log("=".repeat(60));
+  console.log("\nI can help you:");
+  console.log("  • Research competitor prices for your product");
+  console.log("  • Calculate material and production costs");
+  console.log("  • Analyze profitability and break-even points");
+  console.log("  • Estimate potential sales volume");
+  console.log("  • Plan your advertising strategy and budget");
+  console.log("  • Generate a comprehensive business plan");
+  console.log("  • Save and load your business planning data");
+  console.log('\nType "exit" or "quit" to end the conversation.');
+  console.log("=".repeat(60) + "\n");
 }
 
-// LangChain tool definition (shared between LangChain and LangGraph)
-import { DynamicStructuredTool } from "@langchain/core/tools";
-import { z } from "zod";
 
 export const etsyFeesCalculatorSchema = z.object({
   itemPrice: z.number().describe("The price of the Etsy item in dollars"),
