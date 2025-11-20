@@ -1,10 +1,18 @@
 import { tool } from "@langchain/core/tools";
 import { createAgent } from "langchain";
 import { z } from "zod";
-import { checkForOpenAIKey, etsyFeesCalculator, getInput, loadingMessages, printWelcomeMessage, showLoading, systemPrompt } from "./lib/util.js";
+import {
+  checkForOpenAIKey,
+  etsyFeesCalculator,
+  getInput,
+  loadingMessages,
+  printWelcomeMessage,
+  showLoading,
+  systemPrompt,
+} from "./lib/util.js";
 
 const etsyFeesCalculatorTool = tool(
-  async (args) => {
+  (args) => {
     const result = etsyFeesCalculator(args);
     return JSON.stringify(result);
   },
@@ -15,8 +23,11 @@ const etsyFeesCalculatorTool = tool(
     schema: z.object({
       itemPrice: z.number().describe("The price of the Etsy item in dollars"),
       offsiteAds: z
-        .boolean().nullable()
-        .describe("Whether the item uses Etsy offsite ads (use null or false if not applicable)"),
+        .boolean()
+        .nullable()
+        .describe(
+          "Whether the item uses Etsy offsite ads (use null or false if not applicable)"
+        ),
     }),
   }
 );

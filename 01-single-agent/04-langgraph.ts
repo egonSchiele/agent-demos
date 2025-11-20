@@ -1,10 +1,24 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph";
+import { AIMessage } from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
+import {
+  END,
+  MemorySaver,
+  MessagesAnnotation,
+  START,
+  StateGraph,
+} from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { DynamicStructuredTool } from "@langchain/core/tools";
-import { MemorySaver } from "@langchain/langgraph";
+import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
-import { checkForOpenAIKey, etsyFeesCalculator, getInput, loadingMessages, printWelcomeMessage, showLoading, systemPrompt } from "./lib/util.js";
+import {
+  checkForOpenAIKey,
+  etsyFeesCalculator,
+  getInput,
+  loadingMessages,
+  printWelcomeMessage,
+  showLoading,
+  systemPrompt,
+} from "./lib/util.js";
 
 // Initialize ChatOpenAI model
 const model = new ChatOpenAI({
@@ -14,28 +28,32 @@ const model = new ChatOpenAI({
 });
 
 // Define the function tool for LangGraph
-const etsyFeesCalculatorTool = new DynamicStructuredTool({
-  name: "etsyFeesCalculator",
-  description:
-    "Calculates Etsy seller fees for a product listing, including listing fee, transaction fee, payment processing fee, and optional offsite ads fee.",
-  schema: z.object({
-    itemPrice: z.number().describe("The price of the Etsy item in dollars"),
-    offsiteAds: z
-      .boolean().nullable()
-      .describe("Whether the item uses Etsy offsite ads (use null or false if not applicable)"),
-  }),
-  func: async ({ itemPrice, offsiteAds }) => {
+const etsyFeesCalculatorTool = tool(
+  ({ itemPrice, offsiteAds }) => {
     const result = etsyFeesCalculator({
       itemPrice,
       offsiteAds,
     });
     return JSON.stringify(result);
   },
-});
+  {
+    name: "etsyFeesCalculator",
+    description:
+      "Calculates Etsy seller fees for a product listing, including listing fee, transaction fee, payment processing fee, and optional offsite ads fee.",
+    schema: z.object({
+      itemPrice: z.number().describe("The price of the Etsy item in dollars"),
+      offsiteAds: z
+        .boolean()
+        .nullable()
+        .describe(
+          "Whether the item uses Etsy offsite ads (use null or false if not applicable)"
+        ),
+    }),
+  }
+);
 
 // Bind tools to the model
 const modelWithTools = model.bindTools([etsyFeesCalculatorTool]);
-
 
 // Define the agent node - calls the model
 async function callModel(state: typeof MessagesAnnotation.State) {
@@ -46,6 +64,7 @@ async function callModel(state: typeof MessagesAnnotation.State) {
 // Define routing logic - decides whether to call tools or end
 function shouldContinue(state: typeof MessagesAnnotation.State) {
   const lastMessage = state.messages[state.messages.length - 1];
+  if (lastMessage == null || !AIMessage.isInstance(lastMessage)) return END;
 
   // If there are tool calls, continue to tools node
   if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
@@ -93,14 +112,17 @@ async function chat(userInput: string): Promise<string> {
   // Invoke the graph
   const result = await app.invoke(
     {
-      messages
+      messages,
     },
     config
   );
 
   // Get the last message from the result
   const lastMessage = result.messages[result.messages.length - 1];
-  return lastMessage.content || "I apologize, but I could not generate a response.";
+  return (
+    String(lastMessage.content) ||
+    "I apologize, but I could not generate a response."
+  );
 }
 
 async function main() {
